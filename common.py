@@ -1,2 +1,2 @@
-def ip_checksum(content):
+def calcChecksum(content):
     return 'ab'

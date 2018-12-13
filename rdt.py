@@ -1,5 +1,5 @@
 from socket import socket, AF_INET, SOCK_DGRAM, timeout
-from common import ip_checksum
+from common import calcChecksum
 
 class Client:
     send_socket = socket(AF_INET,SOCK_DGRAM)
@@ -15,7 +15,7 @@ class Client:
         dest = (server_addr, server_port)
         pack = (
             str(self.recv_port) +
-            ip_checksum(data) +
+            calcChecksum(data) +
             str(self.seq) +
             data
         ).encode('utf-8')
@@ -28,9 +28,9 @@ class Client:
             except timeout:
                 pass
             else:
-                checksum = message[:2].decode('utf-8')
-                seq = message[5]-48
-                if ip_checksum(message[2:]) == checksum and seq == self.seq:
+                checksum = message.decode('utf-8')[:2]
+                seq = int(message.decode('utf-8')[5])
+                if calcChecksum(message[2:]) == checksum and seq == self.seq:
                     ack_received = True
         self.seq = 1-self.seq
 
@@ -45,26 +45,26 @@ class Server:
     def receive(self): # Receive data from the client 
         message, address = self.recv_socket.recvfrom(4096)
 
-        cli_port = message[:5].decode('utf-8')
-        checksum = message[5:7].decode('utf-8')
-        seq = message[7]-48
-        content = message[8:].decode('utf-8')
+        cli_port = message.decode('utf-8')[:5]
+        checksum = message.decode('utf-8')[5:7]
+        seq = int(message.decode('utf-8')[7])
+        content = message.decode('utf-8')[8:]
 
         dest = ('localhost', int(cli_port))
 
         resp = 'ACK' + str(seq)
         pack = (
-            ip_checksum(resp) +
+            calcChecksum(resp) +
             resp
         ).encode('utf-8')
 
         inv_resp = 'ACK' + str(1-self.expected_seq)
         inv_pack = (
-            ip_checksum(inv_resp) +
+            calcChecksum(inv_resp) +
             inv_resp
         ).encode('utf-8')
 
-        if ip_checksum(content) == checksum:
+        if calcChecksum(content) == checksum:
             self.send_socket.sendto(pack, dest)
             if seq == self.expected_seq:
                 self.expected_seq = 1-self.expected_seq
