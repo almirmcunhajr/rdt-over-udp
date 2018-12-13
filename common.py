@@ -1,2 +1,2 @@
-def ip_checksum(data):
-    return 'ab'    
+def ip_checksum(content):
+    return 'ab'
