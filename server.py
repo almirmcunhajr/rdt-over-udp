@@ -6,7 +6,9 @@ if __name__ == "__main__":
     server.bind('localhost', 12015)
 
     while True:
-        content = server.receive()
+        print('Waiting for incoming data')
+        content = server.receive('localhost', 14740)
         if content != -1:
-            print(content)
-        else print ('Unexpected data received')
+            print('Received data: ' + content)
+        else:
+            print('Unexpected data received')
