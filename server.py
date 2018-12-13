@@ -26,3 +26,4 @@ class Server:
             else:
                 resp = 'ACK'+str(1-self.expected_seq)
                 send_socket(ip_checksum(resp)+resp, dest)
+                return -1
