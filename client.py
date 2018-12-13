@@ -14,12 +14,14 @@ class Client:
         ack_received = False
         dest = (server_addr, server_port)
         while not ack_received:
-            send_socket.sendto(ip_checksum(data) + str(self.seq) + data, dest)
+            send_socket.sendto(ip_checksum(data)+str(self.seq)+data, dest)
             try:
                 message, address = recv_socket.recvfrom(4096)
             except timeout:
                 pass
             else:
-                if ip_checksum(message[2:0]) == message[:2] and message[5] == str(self.seq):
+                checksum = message[:2]
+                seq = message[5]
+                if ip_checksum(message[2:]) == checksum and seq == str(self.seq):
                     ack_received = True
         self.seq = 1-self.seq
