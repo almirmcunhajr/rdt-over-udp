@@ -30,7 +30,7 @@ class Client:
             else:
                 checksum = message.decode('utf-8')[:2]
                 seq = int(message.decode('utf-8')[5])
-                if calcChecksum(message[2:]) == checksum and seq == self.seq:
+                if calcChecksum(message.decode('utf-8')[2:]) == checksum and seq == self.seq:
                     ack_received = True
         self.seq = 1-self.seq
 
