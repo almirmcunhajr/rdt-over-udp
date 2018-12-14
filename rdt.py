@@ -1,15 +1,15 @@
 from socket import socket, AF_INET, SOCK_DGRAM, timeout
 from common import calcChecksum
 
-class Client:
+class Socket:
     send_socket = socket(AF_INET,SOCK_DGRAM)
     recv_socket = socket(AF_INET,SOCK_DGRAM)
     seq = 0
+    expected_seq = 0
 
-    def bind(self, cli_addr, cli_port): # Bind the client receiver socket
-        self.recv_port = cli_port
-        self.recv_socket.bind((cli_addr, cli_port))
-        self.recv_socket.settimeout(1)
+    def bind(self, recv_addr, recv_port): # Bind the receiver socket
+        self.recv_port = recv_port
+        self.recv_socket.bind((recv_addr, recv_port))
     
     def send(self, data, server_addr, server_port): # Send data to server
         dest = (server_addr, server_port)
@@ -33,24 +33,17 @@ class Client:
                 if calcChecksum(message.decode('utf-8')[2:]) == checksum and seq == self.seq:
                     ack_received = True
         self.seq = 1-self.seq
-
-class Server:
-    send_socket = socket(AF_INET,SOCK_DGRAM)
-    recv_socket = socket(AF_INET,SOCK_DGRAM)
-    expected_seq = 0
-
-    def bind(self, serv_addr, serv_port): # Bind the server receiver socket
-        self.recv_socket.bind((serv_addr, serv_port))
     
     def receive(self): # Receive data from the client 
         message, address = self.recv_socket.recvfrom(4096)
-
-        cli_port = message.decode('utf-8')[:5]
+        
+        cli_addr = 'localhost'
+        cli_port = int(message.decode('utf-8')[:5])
         checksum = message.decode('utf-8')[5:7]
         seq = int(message.decode('utf-8')[7])
         content = message.decode('utf-8')[8:]
 
-        dest = ('localhost', int(cli_port))
+        dest = (cli_addr, cli_port)
 
         resp = 'ACK' + str(seq)
         pack = (
@@ -68,7 +61,7 @@ class Server:
             self.send_socket.sendto(pack, dest)
             if seq == self.expected_seq:
                 self.expected_seq = 1-self.expected_seq
-                return content
+                return (cli_addr, cli_port, content)
             else:
                 self.send_socket.sendto(inv_pack, dest)
                 return -1
