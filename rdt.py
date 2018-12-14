@@ -10,6 +10,7 @@ class Socket:
     def bind(self, recv_addr, recv_port): # Bind the receiver socket
         self.recv_port = recv_port
         self.recv_socket.bind((recv_addr, recv_port))
+        self.recv_socket.settimeout(1)
     
     def send(self, data, server_addr, server_port): # Send data to server
         dest = (server_addr, server_port)
@@ -34,8 +35,14 @@ class Socket:
                     ack_received = True
         self.seq = 1-self.seq
     
-    def receive(self): # Receive data from the client 
-        message, address = self.recv_socket.recvfrom(4096)
+    def receive(self): # Receive data from the client     
+        while True:
+            try:
+                message, address = self.recv_socket.recvfrom(4096)
+            except timeout:
+                    pass
+            else:
+                break
         
         cli_addr = 'localhost'
         cli_port = int(message.decode('utf-8')[:5])
